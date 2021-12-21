@@ -1,11 +1,12 @@
 import asyncio
-import aiogram
 import logging
-from aiogram import types
 import os
+import aiogram
+from aiogram import types
 import psycopg2
 
 logging.basicConfig(level=logging.INFO)
+
 
 async def main():
     DATABASE_URL = os.getenv("DATABASE_URL")
@@ -28,7 +29,9 @@ async def main():
 
     @dispatcher.message_handler()
     async def echo(message: types.Message):
-        await message.answer(f"Я тебя не понимаю, {message.from_user.full_name}")
+        await message.answer(
+            f"Я тебя не понимаю, {message.from_user.full_name}"
+        )
 
     logging.info("Starting bot")
     await dispatcher.start_polling()
