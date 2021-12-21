@@ -1,1 +1,1 @@
-# Xmas-NY-greatings-bot
+# Xmas-NY-greetings-bot
