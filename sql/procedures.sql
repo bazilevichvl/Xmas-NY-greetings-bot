@@ -24,11 +24,9 @@ CREATE OR REPLACE FUNCTION store_greeting (rtext varchar)
 RETURNS integer
 LANGUAGE plpgsql
 AS $$
-DECLARE id integer;
 BEGIN
-    INSERT INTO greetings (content) VALUES (rtext) RETURNING greetings.gid INTO id;
-    RETURN id;
-    RETURN id;
+    INSERT INTO greetings (content) VALUES (rtext);
+    RETURN currval(pg_get_serial_sequence('greetings','gid'));
 END;
 $$;
 
@@ -38,6 +36,31 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     DELETE FROM greetings WHERE gid = rgid;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_greeting (rgid integer)
+RETURNS varchar
+LANGUAGE plpgsql
+AS $$
+DECLARE result varchar;
+BEGIN
+    SELECT content FROM greetings WHERE gid = rgid INTO result;
+    RETURN result;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_random_user ()
+RETURNS bigint
+LANGUAGE plpgsql
+AS $$
+DECLARE uid bigint;
+BEGIN
+    SELECT * FROM users OFFSET floor(random() * (
+		SELECT
+			COUNT(*)
+			FROM users)) LIMIT 1 INTO uid;
+    RETURN uid;
 END;
 $$;
 
