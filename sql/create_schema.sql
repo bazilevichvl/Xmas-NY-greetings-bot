@@ -4,6 +4,5 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS greetings (
     gid serial PRIMARY KEY NOT NULL,
-    content varchar(512) NOT NULL,
-    approved boolean
+    content varchar(512) NOT NULL
 );
