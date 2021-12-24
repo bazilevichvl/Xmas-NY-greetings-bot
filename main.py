@@ -23,7 +23,7 @@ async def main():
         logging.error("Telegram API token is not specified")
         sys.exit(-1)
 
-    ADMIN_ID = os.getenv("ADMIN_ID")
+    ADMIN_ID = int(os.getenv("ADMIN_ID"))
     if not ADMIN_ID:
         logging.error("Admin ID is not specified")
         sys.exit(-1)
@@ -81,9 +81,8 @@ async def main():
         uid = call.from_user.id
         if uid != ADMIN_ID:
             return
-        greeting_id = callback_data["greeting_id"]
+        greeting_id = callback_data["id"]
         action = callback_data["action"]
-        logging.info(f"Handling callback {action}#{greeting_id}")
         if action == "approve":
             # get text
             text = ""
@@ -92,7 +91,7 @@ async def main():
                 curr.callproc("get_greeting", [greeting_id])
                 text = curr.fetchone()[0]
                 curr.callproc("get_random_user", [])
-                uid = curr.fetcone()[0]
+                uid = curr.fetchone()[0]
             # send to random user
             await bot.send_message(uid, text)
 
@@ -100,7 +99,8 @@ async def main():
             curr.callproc("remove_greeting", [greeting_id])
         db.commit()
 
-        await call.answer("", markdown=types.reply_keyboard.ReplyKeyboardRemove())
+        await call.message.delete()
+        await call.answer()
 
     logging.info("Starting bot")
     await dispatcher.start_polling()
