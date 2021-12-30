@@ -38,7 +38,7 @@ async def main():
             curr.callproc("register_user", [uid])
         db.commit()
         await message.answer("""
-Привет! Я бот для обмена случайными анонимными новогодними поздравлениями!\n
+Привет! Я бот для обмена случайными новогодними поздравлениями!\n
 Используй команду /greet, чтобы отправить поздравление.\n
 
 Ты будешь получать поздравления от случайных пользователей, так что не забудь
@@ -51,9 +51,10 @@ async def main():
         # Extract greeting text
         text = message.get_args().strip()
         if len(text) == 0:
-            await message.answer("Это все, что ты можешь мне сказать?(")
+            await message.answer("Это все, что ты можешь мне сказать?( (Впиши свое поздравление сразу после команды, человек)")
         else:
             # Save to db
+            text += "\n@" + message.from_user.username
             greeting_id = -1
             with db.cursor() as curr:
                 curr.callproc("store_greeting", [text])
@@ -69,6 +70,7 @@ async def main():
             kb = types.InlineKeyboardMarkup(row_width=2)
             kb.add(*buttons)
             await bot.send_message(ADMIN_ID, f"#{greeting_id}\n{text}", reply_markup=kb)
+            await message.answer("Ваше поздравление отправлено на модерирование) Искренне желаем вам хорошего настроения в этом году!")
 
     @dispatcher.message_handler()
     async def echo(message: types.Message):
