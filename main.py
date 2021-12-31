@@ -40,6 +40,7 @@ async def main():
         await message.answer("""
 Привет! Я бот для обмена случайными новогодними поздравлениями!\n
 Используй команду /greet, чтобы отправить поздравление.\n
+Используй команду /greet_anon, чтобы отправить поздравление без указания алиаса.\n
 
 Ты будешь получать поздравления от случайных пользователей, так что не забудь
 позвать твоих друзей, чтобы увеличить количество отправляемых и получаемых
@@ -51,7 +52,9 @@ async def main():
         # Extract greeting text
         text = message.get_args().strip()
         if len(text) == 0:
-            await message.answer("Это все, что ты можешь мне сказать?( (Впиши свое поздравление сразу после команды, человек)")
+            await message.answer("Это все, что ты можешь мне сказать?( (Впиши свое поздравление сразу после команды, человек)\n"
+                "Например: /greet С новым годом!"
+            )
         else:
             # Save to db
             text += "\n@" + message.from_user.username
@@ -60,7 +63,6 @@ async def main():
                 curr.callproc("store_greeting", [text])
                 greeting_id = curr.fetchone()[0]
             db.commit()
-            logging.info(f"New greeting {greeting_id}")
 
             # Send for approval
             buttons = [
@@ -71,6 +73,33 @@ async def main():
             kb.add(*buttons)
             await bot.send_message(ADMIN_ID, f"#{greeting_id}\n{text}", reply_markup=kb)
             await message.answer("Ваше поздравление отправлено на модерирование) Искренне желаем вам хорошего настроения в этом году!")
+
+    @dispatcher.message_handler(commands=["greet_anon"])
+    async def greet(message: types.Message):
+        # Extract greeting text
+        text = message.get_args().strip()
+        if len(text) == 0:
+            await message.answer("Это все, что ты можешь мне сказать?( (Впиши свое поздравление сразу после команды, человек)\n"
+                    "Например: /greet_anon С новым годом!"
+            )
+        else:
+            # Save to db
+            greeting_id = -1
+            with db.cursor() as curr:
+                curr.callproc("store_greeting", [text])
+                greeting_id = curr.fetchone()[0]
+            db.commit()
+
+            # Send for approval
+            buttons = [
+                        types.InlineKeyboardButton(text="👍", callback_data=review_callback_data.new(id=greeting_id, action="approve")),
+                        types.InlineKeyboardButton(text="👎", callback_data=review_callback_data.new(id=greeting_id, action="reject"))
+                      ]
+            kb = types.InlineKeyboardMarkup(row_width=2)
+            kb.add(*buttons)
+            await bot.send_message(ADMIN_ID, f"#{greeting_id}\n{text}", reply_markup=kb)
+            await message.answer("Ваше поздравление отправлено на модерирование) Искренне желаем вам хорошего настроения в этом году!")
+
 
     @dispatcher.message_handler()
     async def echo(message: types.Message):
