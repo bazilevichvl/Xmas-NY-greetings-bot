@@ -129,14 +129,19 @@ async def main():
         if action == "approve":
             # get text
             text = ""
-            uid = -1
+            BRANCH_FACTOR = 2
+            uids = []
             with db.cursor() as curr:
                 curr.callproc("get_greeting", [greeting_id])
                 text = curr.fetchone()[0]
-                curr.callproc("get_random_user", [])
-                uid = curr.fetchone()[0]
+                while len(uids) < BRANCH_FACTOR:
+                    curr.callproc("get_random_user", [])
+                    uid = curr.fetchone()[0]
+                    if uid not in uids:
+                        uids.append(uid)
             # send to random user
-            await bot.send_message(uid, text)
+            for uid in uids:
+                await bot.send_message(uid, text)
 
         with db.cursor() as curr:
             curr.callproc("remove_greeting", [greeting_id])
