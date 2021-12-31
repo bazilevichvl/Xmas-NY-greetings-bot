@@ -101,6 +101,18 @@ async def main():
             await message.answer("Ваше поздравление отправлено на модерирование) Искренне желаем вам хорошего настроения в этом году!")
 
 
+    @dispatcher.message_handler(commands=["broadcast"])
+    async def broadcast(message: types.Message):
+        if message.from_user.id != ADMIN_ID:
+            await message.answer("Не только лишь все могут делать бродкаст")
+        else:
+            text = message.get_args()
+            with db.cursor() as curr:
+                curr.execute("SELECT uid FROM users;")
+                for user in curr:
+                    user = user[0]
+                    await bot.send_message(user, text)
+
     @dispatcher.message_handler()
     async def echo(message: types.Message):
         await message.answer(
