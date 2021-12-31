@@ -114,7 +114,10 @@ async def main():
                         try:
                             await bot.send_message(user, text)
                         except aiogram.utils.exceptions.BotBlocked:
-                            logging.info(f"User {uid} has blocked the bot")
+                            logging.info(f"User {user} has blocked the bot")
+                            with db.cursor() as curr2:
+                                curr2.execute(f"DELETE FROM users WHERE uid = {user};")
+                            db.commit()
                             continue
 
         @dispatcher.message_handler()
