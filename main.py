@@ -111,7 +111,11 @@ async def main():
                 curr.execute("SELECT uid FROM users;")
                 for user in curr:
                     user = user[0]
-                    await bot.send_message(user, text)
+                    try:
+                        await bot.send_message(user, text)
+                    except aiogram.utils.exceptions.BotBlocked:
+                        logging.info(f"User {uid} has blocked the bot")
+                        continue
 
     @dispatcher.message_handler()
     async def echo(message: types.Message):
@@ -130,18 +134,23 @@ async def main():
             # get text
             text = ""
             BRANCH_FACTOR = 2
-            uids = []
             with db.cursor() as curr:
                 curr.callproc("get_greeting", [greeting_id])
                 text = curr.fetchone()[0]
-                while len(uids) < BRANCH_FACTOR:
+                sent_to = 0
+                uids = []
+                while sent_to < BRANCH_FACTOR:
                     curr.callproc("get_random_user", [])
                     uid = curr.fetchone()[0]
                     if uid not in uids:
                         uids.append(uid)
-            # send to random user
-            for uid in uids:
-                await bot.send_message(uid, text)
+                        try:
+                            await bot.send_message(uid, text)
+                        except aiogram.utils.exceptions.BotBlocked:
+                            curr.execute(f"DELETE FROM users WHERE uid = {uid};")
+                            db.commit()
+                            continue
+                        sent_to += 1
 
         with db.cursor() as curr:
             curr.callproc("remove_greeting", [greeting_id])
